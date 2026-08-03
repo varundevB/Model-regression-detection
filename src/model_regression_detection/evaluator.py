@@ -4,6 +4,7 @@ from typing import Protocol
 from .dataset_models import GoldenDataset, GoldenTestCase
 from .evaluation_models import (
     EvaluationCaseResult,
+    EvaluationSummary,
     ProviderClassificationResult,
 )
 from .models import (
@@ -111,4 +112,79 @@ class EvaluationRunner:
                 error=(
                     f"{type(error).__name__}: {error}"
                 ),
+            )
+
+    def summarize_results(
+                self,
+                results: list[EvaluationCaseResult],
+        ) -> EvaluationSummary:
+            if not results:
+                raise ValueError(
+                    "results must contain at least one case"
+                )
+
+            prompt_versions = {
+                result.prompt_version
+                for result in results
+            }
+            model_names = {
+                result.model_name
+                for result in results
+            }
+
+            if len(prompt_versions) != 1:
+                raise ValueError(
+                    "results must share one prompt version"
+                )
+
+            if len(model_names) != 1:
+                raise ValueError(
+                    "results must share one model name"
+                )
+
+            total_cases = len(results)
+
+            failed_cases = sum(
+                result.error is not None
+                for result in results
+            )
+
+            successful_cases = total_cases - failed_cases
+
+            category_matches = sum(
+                result.category_match
+                for result in results
+            )
+
+            average_latency_ms = (
+                    sum(
+                        result.latency_ms
+                        for result in results
+                    )
+                    / total_cases
+            )
+
+            total_input_tokens = sum(
+                result.input_tokens or 0
+                for result in results
+            )
+
+            total_output_tokens = sum(
+                result.output_tokens or 0
+                for result in results
+            )
+
+            return EvaluationSummary(
+                total_cases=total_cases,
+                successful_cases=successful_cases,
+                failed_cases=failed_cases,
+                category_matches=category_matches,
+                category_accuracy=(
+                        category_matches / total_cases
+                ),
+                average_latency_ms=average_latency_ms,
+                total_input_tokens=total_input_tokens,
+                total_output_tokens=total_output_tokens,
+                prompt_version=next(iter(prompt_versions)),
+                model_name=next(iter(model_names)),
             )
