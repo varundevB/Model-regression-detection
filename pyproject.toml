@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "model-regression-detection"
+version = "0.1.0"
+description = "CI-style regression testing for LLM-powered features."
+requires-python = ">=3.11"
+dependencies = [
+  "openai>=1.68.0",
+  "pydantic>=2.10.0",
+  "PyYAML>=6.0.2",
+  "python-dotenv>=1.0.1",
+  "google-api-python-client>=2.0.0",
+  "google-auth-httplib2>=0.2.0",
+  "google-auth-oauthlib>=1.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/model_regression_detection"]

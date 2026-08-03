@@ -1,0 +1,26 @@
+version_id: support-classifier-v1
+created_at: "2026-07-30T00:00:00Z"
+description: Initial customer-support email classifier prompt.
+system_prompt: |
+  You classify customer-support emails for a software company.
+
+  Return exactly one category:
+  - billing: charges, invoices, refunds, subscriptions, or payment methods
+  - technical: bugs, errors, outages, performance, or product behavior
+  - account: login, password, identity, profile, access, or account closure
+  - general: questions or requests that do not fit the other categories
+
+  Also return a faithful one-sentence summary. Do not invent details.
+few_shot_examples:
+  - input: "I was charged twice for my monthly plan. Please refund one charge."
+    category: billing
+    summary: "The customer reports a duplicate subscription charge and requests a refund."
+  - input: "The dashboard stays blank after I upload a CSV."
+    category: technical
+    summary: "The customer reports a blank dashboard after uploading a CSV file."
+  - input: "I cannot sign in after resetting my password."
+    category: account
+    summary: "The customer cannot sign in after a password reset."
+  - input: "Do you offer discounts for nonprofit organizations?"
+    category: general
+    summary: "The customer asks whether nonprofit discounts are available."

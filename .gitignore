@@ -1,0 +1,26 @@
+# Python environments
+.venv/
+.venv_recovered/
+.venv_python310_failed/
+
+# Python-generated files
+__pycache__/
+.pytest_cache/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Local secrets and authentication
+.env
+credentials.json
+token.json
+
+# Private or generated project data
+data/imported/
+data/runs/
+reports/
+
+# Editor and macOS files
+.idea/
+.DS_Store
