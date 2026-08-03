@@ -6,6 +6,7 @@ from model_regression_detection.dataset_models import (
 )
 from model_regression_detection.evaluation_models import (
     ProviderClassificationResult,
+    EvaluationCaseResult,
 )
 from model_regression_detection.evaluator import EvaluationRunner
 from model_regression_detection.models import (
@@ -14,7 +15,7 @@ from model_regression_detection.models import (
     EmailCategory,
     PromptConfig,
 )
-
+import pytest
 
 class SuccessfulFakeProvider:
     model_name = "fake-model"
@@ -172,3 +173,75 @@ def test_evaluator_processes_complete_dataset(
         result.category_match
         for result in results
     )
+def test_summarize_results_calculates_metrics(
+    prompt_config: PromptConfig,
+) -> None:
+    runner = EvaluationRunner(
+        provider=SuccessfulFakeProvider(),
+        prompt=prompt_config,
+    )
+
+    results = [
+        EvaluationCaseResult(
+            test_case_id="billing-001",
+            expected_category=EmailCategory.BILLING,
+            actual_category=EmailCategory.BILLING,
+            category_match=True,
+            expected_summary=(
+                "The customer reports a billing problem."
+            ),
+            actual_summary=(
+                "The customer reports a billing problem."
+            ),
+            latency_ms=100.0,
+            prompt_version="support-classifier-v1",
+            model_name="fake-model",
+            input_tokens=100,
+            output_tokens=20,
+        ),
+        EvaluationCaseResult(
+            test_case_id="technical-001",
+            expected_category=EmailCategory.TECHNICAL,
+            actual_category=None,
+            category_match=False,
+            expected_summary=(
+                "The customer reports an upload problem."
+            ),
+            actual_summary=None,
+            latency_ms=300.0,
+            prompt_version="support-classifier-v1",
+            model_name="fake-model",
+            error="TimeoutError: provider timed out",
+        ),
+    ]
+
+    summary = runner.summarize_results(results)
+
+    assert summary.total_cases == 2
+    assert summary.successful_cases == 1
+    assert summary.failed_cases == 1
+    assert summary.category_matches == 1
+    assert summary.category_accuracy == 0.5
+    assert summary.average_latency_ms == 200.0
+    assert summary.total_input_tokens == 100
+    assert summary.total_output_tokens == 20
+    assert (
+        summary.prompt_version
+        == "support-classifier-v1"
+    )
+    assert summary.model_name == "fake-model"
+
+
+def test_summarize_results_rejects_empty_results(
+    prompt_config: PromptConfig,
+) -> None:
+    runner = EvaluationRunner(
+        provider=SuccessfulFakeProvider(),
+        prompt=prompt_config,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="results must contain at least one case",
+    ):
+        runner.summarize_results([])
