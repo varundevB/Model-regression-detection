@@ -1,7 +1,7 @@
 from time import perf_counter
 from typing import Protocol
 
-from .dataset_models import GoldenTestCase
+from .dataset_models import GoldenDataset, GoldenTestCase
 from .evaluation_models import (
     EvaluationCaseResult,
     ProviderClassificationResult,
@@ -33,6 +33,15 @@ class EvaluationRunner:
     ) -> None:
         self._provider = provider
         self._prompt = prompt
+
+    def evaluate_dataset(
+            self,
+            dataset: GoldenDataset,
+    ) -> list[EvaluationCaseResult]:
+        return [
+            self.evaluate_case(test_case)
+            for test_case in dataset.test_cases
+        ]
 
     def evaluate_case(
         self,
