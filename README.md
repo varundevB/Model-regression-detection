@@ -34,4 +34,3 @@ src/           Feature and configuration code
 tests/         Contract and prompt-validation tests
 ```
 
-The golden evaluation dataset is intentionally deferred to Part 2.
