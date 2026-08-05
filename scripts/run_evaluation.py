@@ -6,6 +6,12 @@ from model_regression_detection.evaluation_service import (
 from model_regression_detection.openai_provider import (
     OpenAIClassificationProvider,
 )
+from model_regression_detection.regression import (
+    evaluate_regression_gate,
+)
+from model_regression_detection.regression_policy import (
+    load_regression_policy,
+)
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -22,6 +28,12 @@ PROMPT_PATH = (
     / "support_classifier_v1.yaml"
 )
 
+POLICY_PATH = (
+    PROJECT_ROOT
+    / "config"
+    / "regression_policy_v1.yaml"
+)
+
 REPORT_DIRECTORY = PROJECT_ROOT / "reports"
 
 
@@ -36,6 +48,12 @@ def main() -> None:
     )
 
     summary = report.summary
+    policy = load_regression_policy(POLICY_PATH)
+
+    gate = evaluate_regression_gate(
+        summary=summary,
+        policy=policy,
+    )
 
     print()
     print("Evaluation completed")
@@ -66,6 +84,24 @@ def main() -> None:
         f"{summary.total_output_tokens}"
     )
     print(f"Report: {report_path}")
+
+    print()
+    print(
+        "Regression gate: "
+        + ("PASS" if gate.passed else "FAIL")
+    )
+
+    for check in gate.checks:
+        status = "PASS" if check.passed else "FAIL"
+
+        print(
+            f"- {check.metric_name}: {status} "
+            f"(actual={check.actual_value}, "
+            f"threshold={check.threshold_value})"
+        )
+
+    if not gate.passed:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
