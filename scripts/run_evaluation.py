@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 from model_regression_detection.evaluation_service import (
@@ -16,39 +17,78 @@ from model_regression_detection.regression_policy import (
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
-DATASET_PATH = (
+DEFAULT_DATASET_PATH = (
     PROJECT_ROOT
     / "data"
     / "golden_dataset_v1.json"
 )
 
-PROMPT_PATH = (
+DEFAULT_PROMPT_PATH = (
     PROJECT_ROOT
     / "prompts"
     / "support_classifier_v1.yaml"
 )
 
-POLICY_PATH = (
+DEFAULT_POLICY_PATH = (
     PROJECT_ROOT
     / "config"
     / "regression_policy_v1.yaml"
 )
 
-REPORT_DIRECTORY = PROJECT_ROOT / "reports"
+DEFAULT_REPORT_DIRECTORY = PROJECT_ROOT / "reports"
 
 
-def main() -> None:
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Run the complete golden dataset evaluation."
+        )
+    )
+
+    parser.add_argument(
+        "--dataset",
+        type=Path,
+        default=DEFAULT_DATASET_PATH,
+        help="Path to the golden dataset JSON file.",
+    )
+
+    parser.add_argument(
+        "--prompt",
+        type=Path,
+        default=DEFAULT_PROMPT_PATH,
+        help="Path to the prompt YAML file.",
+    )
+
+    parser.add_argument(
+        "--policy",
+        type=Path,
+        default=DEFAULT_POLICY_PATH,
+        help="Path to the absolute regression policy.",
+    )
+
+    parser.add_argument(
+        "--output-directory",
+        type=Path,
+        default=DEFAULT_REPORT_DIRECTORY,
+        help="Directory where the JSON report is written.",
+    )
+
+    return parser.parse_args()
+
+
+def main() -> int:
+    arguments = parse_arguments()
     provider = OpenAIClassificationProvider()
 
     report, report_path = run_evaluation(
         provider=provider,
-        dataset_path=DATASET_PATH,
-        prompt_path=PROMPT_PATH,
-        output_directory=REPORT_DIRECTORY,
+        dataset_path=arguments.dataset,
+        prompt_path=arguments.prompt,
+        output_directory=arguments.output_directory,
     )
 
     summary = report.summary
-    policy = load_regression_policy(POLICY_PATH)
+    policy = load_regression_policy(arguments.policy)
 
     gate = evaluate_regression_gate(
         summary=summary,
@@ -100,9 +140,8 @@ def main() -> None:
             f"threshold={check.threshold_value})"
         )
 
-    if not gate.passed:
-        raise SystemExit(1)
+    return 0 if gate.passed else 1
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
