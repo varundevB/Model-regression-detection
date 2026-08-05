@@ -1,0 +1,3 @@
+minimum_category_accuracy: 0.90
+maximum_failed_cases: 0
+maximum_average_latency_ms: 3000.0
