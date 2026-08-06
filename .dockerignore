@@ -1,0 +1,32 @@
+# Local Python environments
+.venv/
+.venv_*/
+venv/
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Git and editor files
+.git/
+.github/
+.idea/
+.DS_Store
+
+# Secrets and authentication
+.env
+credentials.json
+token.json
+
+# Private or generated data
+data/imported/
+data/runs/
+reports/
+
+# Temporary files
+tmp/
+output/
