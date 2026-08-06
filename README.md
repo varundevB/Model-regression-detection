@@ -285,6 +285,48 @@ The project excludes the following local or sensitive files from Git:
 - CI verifies the code and configuration but does not make live OpenAI calls.
 - The current evaluation focuses on one classification use case.
 
+## Docker
+
+The project can run inside a Python 3.12 Linux container. The image runs as a non-root user and excludes local environments, credentials, OAuth tokens, generated reports, and private imported data.
+
+Build the image:
+
+```bash
+docker build -t model-regression-detection:dev .
+```
+
+Run the automated test suite:
+
+```bash
+docker run --rm model-regression-detection:dev
+```
+
+The automated tests use fake providers and do not make OpenAI API calls.
+
+Validate the golden dataset:
+
+```bash
+docker run --rm \
+  model-regression-detection:dev \
+  python scripts/validate_golden_dataset.py
+```
+
+Run a real evaluation:
+
+```bash
+docker run --rm \
+  --env-file .env \
+  -v "$(pwd)/reports:/app/reports" \
+  model-regression-detection:dev \
+  python scripts/run_evaluation.py \
+  --dataset data/golden_dataset_v1.json \
+  --prompt prompts/support_classifier_v2.yaml \
+  --policy config/regression_policy_v1.yaml \
+  --output-directory reports
+```
+
+The `.env` file is supplied only at runtime and is not copied into the image. The bind-mounted `reports/` directory preserves generated reports on the host after the container exits.
+
 
 ## What I learned
 
@@ -296,4 +338,3 @@ Building this project involved more than calling an LLM API. The important work 
 - recording enough metadata to reproduce experiments;
 - treating prompts as versioned code;
 - detecting both absolute failures and relative regressions;
-- using Git branches, pull requests, and automated CI checks.
